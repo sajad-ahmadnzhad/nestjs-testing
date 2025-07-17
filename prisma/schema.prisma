@@ -6,10 +6,40 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+enum TodoStatus {
+  OPEN
+  DONE
+  IN_PROGRESS
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  firstName String
+  lastName  String
+  email     String
+  createdAt DateTime
+  updatedAt DateTime
+
+  todos Todo[]
+
+  @@map("users")
+}
+
+model Todo {
+  id          Int        @id @default(autoincrement())
+  userId      Int
+  title       String
+  description String
+  status      TodoStatus @default(OPEN)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("todos")
 }
