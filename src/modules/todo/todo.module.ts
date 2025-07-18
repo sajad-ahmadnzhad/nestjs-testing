@@ -8,4 +8,4 @@ import { TodoRepository } from './todo.repository';
   controllers: [TodoController],
   providers: [TodoService, PrismaService, TodoRepository],
 })
-export class TodoModule { }
+export class TodoModule {}

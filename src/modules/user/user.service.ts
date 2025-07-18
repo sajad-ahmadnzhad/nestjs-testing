@@ -1,26 +1,54 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserRepository } from './user.repository';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class UserService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(private readonly userRepository: UserRepository) {}
+
+  async create(createUserDto: CreateUserDto): Promise<{ message: string; user: User }> {
+    const existingUser = await this.userRepository.findOne({ where: { firstName: createUserDto.firstName } });
+
+    if (existingUser) throw new ConflictException('Already exists user with this firstName.');
+
+    const now = new Date();
+
+    const newUser = await this.userRepository.create({ data: { ...createUserDto, createdAt: now, updatedAt: now } });
+
+    return { message: 'Created user successfully.', user: newUser };
   }
 
-  findAll() {
-    return `This action returns all user`;
+  findAll(): Promise<User[]> {
+    return this.userRepository.findAll();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findOne(id: number): Promise<User> {
+    const existingUser = await this.userRepository.findOne({ where: { id } });
+
+    if (!existingUser) throw new NotFoundException('User not found.');
+
+    return existingUser;
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async update(id: number, updateUserDto: UpdateUserDto): Promise<{ message: string; user: User }> {
+    await this.findOne(id);
+
+    const existingUser = await this.userRepository.findOne({ where: { firstName: updateUserDto.firstName, NOT: { id } } });
+
+    if (existingUser) throw new ConflictException('Already exists user with this firstName.');
+
+    const updatedUser = await this.userRepository.update({ where: { id }, data: updateUserDto });
+
+    return { message: 'User updated successfully.', user: updatedUser };
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async remove(id: number): Promise<{ message: string; user: User }> {
+    await this.findOne(id);
+
+    const removedUser = await this.userRepository.remove({ where: { id } });
+
+    return { message: 'Removed user successfully', user: removedUser };
   }
 }
