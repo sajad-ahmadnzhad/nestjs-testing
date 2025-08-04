@@ -23,6 +23,6 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy, OnMo
 
     const models = Reflect.ownKeys(this).filter(key => key[0] !== "_")
 
-    return Promise.all(models.map((modelKey) => this[modelKey].deleteMany()))
+    return Promise.all(models.map((modelKey) => this[modelKey].deleteMany?.()))
   }
 }
